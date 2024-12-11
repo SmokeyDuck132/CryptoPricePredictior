@@ -142,7 +142,7 @@ This project is licensed under the [MIT License](LICENSE). You are free to use, 
 
 ## Contact
 
-For questions, suggestions, or feedback, feel free to open an issue on the GitHub repository or contact the maintainer at `your.email@example.com`.
+For questions, suggestions, or feedback, feel free to open an issue on the GitHub repository or contact the maintainer at `smokeyduck132@gmail.com`.
 
 ---
 
