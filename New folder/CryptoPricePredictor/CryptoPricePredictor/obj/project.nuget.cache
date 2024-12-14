@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "dgSpecHash": "62EzkCWezZE=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\truon\\Desktop\\Projects\\New folder\\CryptoPricePredictor\\CryptoPricePredictor\\CryptoPricePredictor.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\truon\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512",
+    "C:\\Users\\truon\\.nuget\\packages\\newtonsoft.json.bson\\1.0.3\\newtonsoft.json.bson.1.0.3.nupkg.sha512",
+    "C:\\Users\\truon\\.nuget\\packages\\newtonsoft.json.schema\\4.0.1\\newtonsoft.json.schema.4.0.1.nupkg.sha512",
+    "C:\\Users\\truon\\.nuget\\packages\\skender.stock.indicators\\2.6.0\\skender.stock.indicators.2.6.0.nupkg.sha512",
+    "C:\\Users\\truon\\.nuget\\packages\\system.io.pipelines\\9.0.0\\system.io.pipelines.9.0.0.nupkg.sha512",
+    "C:\\Users\\truon\\.nuget\\packages\\system.text.encodings.web\\9.0.0\\system.text.encodings.web.9.0.0.nupkg.sha512",
+    "C:\\Users\\truon\\.nuget\\packages\\system.text.json\\9.0.0\\system.text.json.9.0.0.nupkg.sha512",
+    "C:\\Users\\truon\\.nuget\\packages\\winforms.datavisualization\\1.9.2\\winforms.datavisualization.1.9.2.nupkg.sha512"
+  ],
+  "logs": []
+}
