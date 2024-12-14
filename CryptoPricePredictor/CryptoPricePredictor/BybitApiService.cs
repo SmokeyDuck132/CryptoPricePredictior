@@ -1,99 +1,101 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
-// bybit sucks at api, maybe u can use it but i cant so, if u can make it. NICEEE
+using Newtonsoft.Json;
+
 namespace CryptoPricePredictor
 {
     public class BybitApiService
     {
         private static readonly HttpClient client = new HttpClient();
+        private readonly string _apiKey;
+        private readonly string _apiSecret;
 
-        /// <summary>
-        /// Fetch spot kline data from Bybit's Spot API.
-        /// </summary>
-        /// <param name="symbol">Symbol like "BTCUSDT"</param>
-        /// <param name="interval">Spot intervals like "1m", "5m", "15m", "1h", "4h", "1D"</param>
-        /// <param name="limit">Number of data points to fetch (e.g., 200)</param>
-        /// <returns>List of KlineData objects</returns>
-        public async Task<List<KlineData>> FetchKlineDataAsync(string symbol, string interval, int limit = 200)
+        public BybitApiService(string apiKey, string apiSecret)
         {
+            _apiKey = apiKey;
+            _apiSecret = apiSecret;
+        }
+
+        public async Task<List<KlineData>> FetchKlineDataAsync(string category, string symbol, string interval, int limit = 200)
+        {
+            if (string.IsNullOrEmpty(category))
+                throw new ArgumentException("Category cannot be null or empty.", nameof(category));
             if (string.IsNullOrEmpty(symbol))
                 throw new ArgumentException("Symbol cannot be null or empty.", nameof(symbol));
-
             if (string.IsNullOrEmpty(interval))
                 throw new ArgumentException("Interval cannot be null or empty.", nameof(interval));
 
-            // Ensure symbol is in correct format (no slash)
-            symbol = symbol.Replace("/", "");
+            string url = $"https://api.bybit.com/v5/market/kline?category={category}&symbol={symbol}&interval={interval}&limit={limit}";
 
-            // Spot API endpoint for Kline data
-            string url = $"https://api.bybit.com/public/spot/v1/kline?symbol={symbol}&interval={interval}&limit={limit}";
-
-            HttpResponseMessage response = await client.GetAsync(url);
-            response.EnsureSuccessStatusCode(); // Will throw if not 2xx
-
-            string json = await response.Content.ReadAsStringAsync();
-            BybitSpotKlineResponse? apiResponse = JsonConvert.DeserializeObject<BybitSpotKlineResponse>(json);
-
-            if (apiResponse == null || apiResponse.RetCode != 0)
+            try
             {
-                // If RetCode != 0, there's an API error or invalid symbol/interval
-                throw new Exception($"API Error: {apiResponse?.RetMsg ?? "Unknown error"}");
-            }
+                HttpResponseMessage response = await client.GetAsync(url);
 
-            // Convert SpotKlineData to KlineData objects
-            var result = new List<KlineData>();
-            foreach (var item in apiResponse.Result)
-            {
-                // Spot API returns data arrays like:
-                // [ open_time(ms), open, high, low, close, volume ]
-                // Convert them to KlineData
-                var openTimeMs = Convert.ToInt64(item[0]);
-                var open = Convert.ToDouble(item[1]);
-                var high = Convert.ToDouble(item[2]);
-                var low = Convert.ToDouble(item[3]);
-                var close = Convert.ToDouble(item[4]);
-                var volume = Convert.ToDouble(item[5]);
+                // Ensure the response is successful
+                response.EnsureSuccessStatusCode();
 
-                result.Add(new KlineData
+                string json = await response.Content.ReadAsStringAsync();
+
+                // Deserialize the response
+                BybitKlineResponse? apiResponse = JsonConvert.DeserializeObject<BybitKlineResponse>(json);
+
+                if (apiResponse == null || apiResponse.RetCode != 0)
                 {
-                    OpenTime = openTimeMs,
-                    Open = open,
-                    High = high,
-                    Low = low,
-                    Close = close,
-                    Volume = volume,
-                    // Spot does not return turnover in the same way as futures,
-                    // you can set Turnover = volume or 0.0 if not applicable.
-                    Turnover = 0.0
-                });
-            }
+                    throw new Exception($"API Error: {apiResponse?.RetMsg ?? "Unknown error"}");
+                }
 
-            return result;
+                // Parse the Kline data from the "list" field
+                var result = new List<KlineData>();
+                foreach (var item in apiResponse.Result.List)
+                {
+                    result.Add(new KlineData
+                    {
+                        OpenTime = Convert.ToInt64(item[0]),
+                        Open = Convert.ToDouble(item[1]),
+                        High = Convert.ToDouble(item[2]),
+                        Low = Convert.ToDouble(item[3]),
+                        Close = Convert.ToDouble(item[4]),
+                        Volume = Convert.ToDouble(item[5]),
+                        Turnover = 0.0 // Update if the API provides this information
+                    });
+                }
+
+                return result;
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new Exception($"Error fetching data from Bybit API: {ex.Message}");
+            }
         }
     }
 
-    // Classes for the Spot API response format
-    public class BybitSpotKlineResponse
+
+    public class BybitKlineResponse
     {
-        [JsonProperty("ret_code")]
+        [JsonProperty("retCode")]
         public int RetCode { get; set; }
 
-        [JsonProperty("ret_msg")]
+        [JsonProperty("retMsg")]
         public string RetMsg { get; set; } = string.Empty;
 
         [JsonProperty("result")]
-        public List<List<string>> Result { get; set; } = new List<List<string>>();
-
-        [JsonProperty("ext_code")]
-        public string ExtCode { get; set; } = string.Empty;
-
-        [JsonProperty("ext_info")]
-        public string ExtInfo { get; set; } = string.Empty;
-
-        [JsonProperty("time_now")]
-        public string TimeNow { get; set; } = string.Empty;
+        public BybitKlineResult Result { get; set; } = new BybitKlineResult();
     }
+
+    public class BybitKlineResult
+{
+    [JsonProperty("category")]
+    public string Category { get; set; } = string.Empty;
+
+    [JsonProperty("symbol")]
+    public string Symbol { get; set; } = string.Empty;
+
+    [JsonProperty("interval")]
+    public string Interval { get; set; } = string.Empty;
+
+    [JsonProperty("list")]
+    public List<List<object>> List { get; set; } = new List<List<object>>();
+}
 }
